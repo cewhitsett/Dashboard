@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <title>Elijah's Dashboard</title>
+  <meta charset="utf-8">
+  <script src="{{url_for('static',filename='vue.js')}}"></script>
+</head>
+<body>
+  <div id="header">
+    <span>[[dateString]]</span>
+    <span>[[timeString]]</span>
+  </div>
+
+  <script>
+    var months = [
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","Decemeber"
+    ];
+    var weekdays = [
+      "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+    ];
+    var ajaxRequest = function(url) {
+
+    };
+    var header = new Vue({
+      el: "#header",
+      data: {
+        greeting: "Howdy, Elijah!",
+        timeString: "",
+        dateString: "",
+        weather: null,
+        where: null,
+      },
+      created: function() {
+        this.timeNow();
+      },
+      methods: {
+        formatTime: function(t) {
+          if (t < 10) {
+            return "0" + t;
+          }
+          return t;
+        },
+        timeNow: function() {
+          var self = this;
+          setInterval(function() {
+            console.log("hey");
+            var d = new Date();
+            var month = months[d.getMonth()];
+            var dom   = d.getDate();
+            var year  = d.getFullYear();
+
+            var hour  = d.getHours();
+            var mins  = d.getMinutes();
+            var secs  = d.getSeconds();
+
+            if (mins < 10) {
+              mins = "0"+mins;
+            }
+            if (secs < 10) {
+              secs = "0"+secs;
+            }
+
+            self.dateString = "" +month+ " "+dom+", "+year;
+            self.timeString = "" +hour + ":"+mins+":"+secs;
+          }, 100);
+        }
+      },
+      computed: {
+
+      },
+      delimiters: ["[[","]]"]
+    })
+  </script>
+</body>
+</html>
