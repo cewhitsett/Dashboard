@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import requests
-from config import weather_key, defaultWeather, myClasses
+from config import weather_key, defaultWeather, myClasses,sched
 
 app = Flask(__name__)
 
@@ -15,7 +15,7 @@ def getclasses():
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html",schedule=sched)
 
 
 @app.route("/weather/<lat>/<lon>")
