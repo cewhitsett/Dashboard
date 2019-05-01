@@ -7,10 +7,32 @@
 </head>
 <body>
   <div id="header">
-    <span>[[dateString]]</span>
-    <span>[[timeString]]</span>
+    <span>Today is [[dateString]]</span>
+    <span>It is [[timeString]]</span>
+    <span>It is [[temp]]&#176;F</span>
+    <span>[[precip]]</span>
+    <span>You are in [[city]]</span>
+    <span>The minimum today is [[mintemp]]&#176;F</span>
+    <span>The maximum today is [[maxtemp]]&#176;F</span>
+    <span>It is [[humid]]&#x25; humidity</span>
   </div>
+  <div id="classes">
+    <table>
+      <thead>
+        <tr>
+          <th>Course</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="cls in classes">
+          <td>[[cls.name]]</td>
+          <td><a v-bind:href="cls.url" target="_blank">Class Url</a></td>
+        </tr>
+      </tbody>
 
+    </table>
+  </div>
+  <iframe src="https://calendar.google.com/calendar/embed?showTitle=0&amp;showNav=0&amp;showDate=0&amp;showTz=0&amp;mode=WEEK&amp;height=700&amp;wkst=1&amp;bgcolor=%2399ff99&amp;src=ewhitsett%40g.hmc.edu&amp;color=%231B887A&amp;ctz=America%2FLos_Angeles" style="border-width:0" width="800" height="700" frameborder="0" scrolling="no"></iframe>
   <script>
     var months = [
       "January","February","March","April","May","June",
@@ -30,9 +52,27 @@
         dateString: "",
         weather: null,
         where: null,
+        lat: null,
+        lng: null,
+        temp: 50,
+        precip: "none",
+        humid: null,
+        mintemp: 0,
+        maxtemp: 200,
+        city: "Washington"
       },
       created: function() {
         this.timeNow();
+
+        var self = this;
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            self.lng = position.coords.longitude;
+            self.lat = position.coords.latitude;
+          });
+        }
+
+        this.weatherNow();
       },
       methods: {
         formatTime: function(t) {
@@ -44,7 +84,6 @@
         timeNow: function() {
           var self = this;
           setInterval(function() {
-            console.log("hey");
             var d = new Date();
             var month = months[d.getMonth()];
             var dom   = d.getDate();
@@ -64,9 +103,75 @@
             self.dateString = "" +month+ " "+dom+", "+year;
             self.timeString = "" +hour + ":"+mins+":"+secs;
           }, 100);
+        },
+        weatherNow: function() {
+          var self = this;
+          var xhr = new XMLHttpRequest();
+
+          xhr.open("GET","/weather/"+self.lat+"/"+self.lng, true);
+
+          xhr.onload = function() {
+            var data = JSON.parse(this.response);
+
+            if (data.cod === 200) {
+              self.humid = Math.trunc(data.main.humidity);
+              self.temp  = Math.trunc(data.main.temp);
+              self.maxtemp = Math.trunc(data.main.temp_max);
+              self.mintemp = Math.trunc(data.main.temp_min);
+              self.city    = data.name;
+              if (data.rain !== null) {
+                self.precip = "rain";
+              }
+            }
+          }
+
+          xhr.send();
+          setInterval(function() {
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("GET","/weather/"+self.lat+"/"+self.lng, true);
+
+            xhr.onload = function() {
+              var data = JSON.parse(this.response);
+
+              if (data.cod === 200) {
+                self.humid = Math.trunc(data.main.humidity);
+                self.temp  = Math.trunc(data.main.temp);
+                self.maxtemp = Math.trunc(data.main.temp_max);
+                self.mintemp = Math.trunc(data.main.temp_min);
+                self.city    = data.name;
+                if (data.rain !== null) {
+                  self.precip = "rain";
+                }
+              }
+            }
+
+            xhr.send();
+          }, 600*1000);
         }
       },
       computed: {
+
+      },
+      delimiters: ["[[","]]"]
+    })
+    var classes = new Vue({
+      el:"#classes",
+      data: {
+        classes: null,
+      },
+      created: function() {
+        var xhr = new XMLHttpRequest();
+        var self = this;
+        xhr.open("GET","/getclasses", true);
+
+        xhr.onload = function() {
+          var data = JSON.parse(this.response);
+          console.log(data);
+          self.classes = data;
+        }
+
+        xhr.send();
 
       },
       delimiters: ["[[","]]"]
